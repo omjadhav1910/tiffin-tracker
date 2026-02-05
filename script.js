@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mealTypeBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentSelection.mealType = btn.dataset.value;
-            currentSelection.price = currentSelection.mealType === 'veg' ? 70 : 80;
+            currentSelection.price = currentSelection.mealType === 'veg' ? 70 : 100;
         });
     });
 

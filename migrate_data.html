@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Migration</title>
+</head>
+
+<body>
+    <h1>Migrating Data...</h1>
+    <div id="status">Starting...</div>
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { collection, getDocs, updateDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        async function migrate() {
+            const statusDiv = document.getElementById('status');
+            try {
+                statusDiv.innerHTML += '<br>Querying entries...';
+
+                // Query all entries where price is 80 (assuming old non-veg price) OR mealType is 'non-veg'
+                // Safest to look for 'non-veg' and update price to 100.
+                // However, user said "change existing data", usually implies matching the new rate.
+
+                const q = query(collection(db, "entries"), where("mealType", "==", "non-veg"));
+                const querySnapshot = await getDocs(q);
+
+                statusDiv.innerHTML += `<br>Found ${querySnapshot.size} non-veg entries. Updating...`;
+
+                let count = 0;
+                const updatePromises = [];
+
+                querySnapshot.forEach((document) => {
+                    const data = document.data();
+                    if (data.price !== 100) {
+                        const docRef = doc(db, "entries", document.id);
+                        updatePromises.push(updateDoc(docRef, { price: 100 }));
+                        count++;
+                    }
+                });
+
+                await Promise.all(updatePromises);
+
+                statusDiv.innerHTML += `<br>Successfully updated ${count} entries to price 100.`;
+                statusDiv.innerHTML += `<br>Migration Complete.`;
+                console.log('Migration Complete');
+
+            } catch (error) {
+                console.error("Migration failed: ", error);
+                statusDiv.innerHTML += `<br>Error: ${error.message}`;
+            }
+        }
+
+        migrate();
+    </script>
+</body>
+
+</html>
